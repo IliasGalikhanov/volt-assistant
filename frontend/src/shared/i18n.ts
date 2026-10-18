@@ -1,5 +1,15 @@
 import type { Language, Product } from "./types";
 const ru = {
+  previousPage: "Назад",
+  nextPage: "Далее",
+
+  saveDraft: "Сохранить черновик",
+  savingDraft: "Сохраняем черновик…",
+  unsavedDraft:
+    "Есть несохранённые изменения. Сохраните черновик перед выходом.",
+  draftReady: "Правки можно сохранить и продолжить позже.",
+  discardDraft: "Закрыть без сохранения изменений?",
+
   workspace: "Помощник закупщика",
   catalog: "Каталог",
   specifications: "Спецификации",
@@ -155,6 +165,15 @@ const ru = {
 } as const;
 type Key = keyof typeof ru;
 const en: Record<Key, string> = {
+  previousPage: "Previous",
+  nextPage: "Next",
+
+  saveDraft: "Save draft",
+  savingDraft: "Saving draft…",
+  unsavedDraft: "Unsaved changes. Save the draft before leaving.",
+  draftReady: "Save your edits to continue later.",
+  discardDraft: "Discard unsaved changes?",
+
   workspace: "Purchasing workspace",
   catalog: "Catalogue",
   specifications: "Specifications",
@@ -308,6 +327,15 @@ const en: Record<Key, string> = {
   awaiting: "Select or correct the items",
 };
 const kk: Record<Key, string> = {
+  previousPage: "Алдыңғы",
+  nextPage: "Келесі",
+
+  saveDraft: "Жобаны сақтау",
+  savingDraft: "Жоба сақталуда…",
+  unsavedDraft: "Сақталмаған өзгерістер бар. Шығу алдында жобаны сақтаңыз.",
+  draftReady: "Кейін жалғастыру үшін түзетулерді сақтаңыз.",
+  discardDraft: "Сақталмаған өзгерістерді жою керек пе?",
+
   workspace: "Сатып алу көмекшісі",
   catalog: "Каталог",
   specifications: "Спецификациялар",

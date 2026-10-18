@@ -50,6 +50,7 @@ export type Job = {
   status: string;
   name: string;
   error: string;
+  error_code?: string;
   result: { rows?: SpecRow[]; products?: Product[] };
   created_at: string;
 };
@@ -65,3 +66,5 @@ export type Alternative = {
   matched: string[];
   differences: string[];
 };
+
+export type Page = "catalog" | "specifications" | "chat" | "cart" | "data";

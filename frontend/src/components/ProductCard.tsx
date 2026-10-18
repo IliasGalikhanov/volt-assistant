@@ -1,12 +1,12 @@
 import {
+  ArrowUpRight,
   Cable,
+  Check,
   CircuitBoard,
   Lightbulb,
-  ArrowUpRight,
-  Check,
 } from "lucide-react";
+import { productName, productPrice, translator } from "../shared/i18n";
 import type { Language, Product } from "../shared/types";
-import { money, productName, translator, productPrice } from "../shared/i18n";
 export function ProductSymbol({ category }: { category: string }) {
   const Icon =
     category === "cable"

@@ -139,3 +139,87 @@ test("catalogue preview and session-isolated import", async ({
   );
   await second.close();
 });
+
+test("saved review survives reload and stale tabs cannot overwrite it", async ({
+  page,
+}) => {
+  await page.goto("/#specifications");
+  await page
+    .getByLabel("Выберите файл", { exact: true })
+    .setInputFiles(path.resolve("public/examples/specification.csv"));
+  await page
+    .getByRole("button", { name: "Проверить позиции", exact: true })
+    .click();
+  await page.getByLabel("Количество 1", { exact: true }).fill("5");
+  await page
+    .getByLabel("Выберите товар 1", { exact: true })
+    .selectOption("DEMO-MCB-002");
+  await page
+    .getByRole("button", { name: "Сохранить черновик", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Сохранить черновик", exact: true }),
+  ).toBeDisabled();
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Проверить позиции", exact: true })
+    .click();
+  await expect(page.getByLabel("Количество 1", { exact: true })).toHaveValue(
+    "5",
+  );
+  await expect(
+    page.getByLabel("Выберите товар 1", { exact: true }),
+  ).toHaveValue("DEMO-MCB-002");
+
+  const jobs = await (await page.request.get("/api/jobs")).json();
+  const endpoint = "/api/jobs/" + jobs[0].id + "/draft";
+  const current = await (await page.request.get(endpoint)).json();
+  current.draft.rows[0].quantity = 7;
+  expect(
+    (
+      await page.request.put(endpoint, {
+        data: current,
+        headers: { "X-Volt-Request": "1" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.getByLabel("Количество 1", { exact: true }).fill("6");
+  await page
+    .getByRole("button", { name: "Сохранить черновик", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText("Черновик изменён");
+  const persisted = await (await page.request.get(endpoint)).json();
+  expect(persisted.draft.rows[0].quantity).toBe(7);
+  expect(
+    (await (await page.request.get("/api/cart")).json()).lines,
+  ).toHaveLength(0);
+});
+
+test("10000 synthetic products stay usable and numeric search is exact", async ({ page }) => {
+  test.setTimeout(150000);
+  const catalogue = Array.from({ length: 10000 }, (_, i) => ({
+    sku: `SYNTH-MCB-${String(i).padStart(5,"0")}`, name: `Synthetic breaker ${1 + i % 200}A`,
+    category: "breaker", price_minor: 100000, currency: "KZT", unit: "pcs", step: 1,
+    stores: { central: 100 }, attributes: { current_a: String(1 + i % 200), poles: "1", voltage_v: "230" },
+    fetched_at: "2026-01-01T00:00:00Z",
+  }));
+  await page.goto("/#data");
+  await page.getByLabel("Импорт каталога Выберите файл", { exact: true }).setInputFiles({
+    name: "synthetic-10000.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(catalogue)),
+  });
+  await expect(page.getByRole("button", { name: "Подтвердить импорт", exact: true })).toBeVisible({ timeout: 60000 });
+  await page.getByLabel("Название каталога", { exact: true }).fill("Synthetic 10000");
+  await page.getByRole("button", { name: "Подтвердить импорт", exact: true }).click();
+  await expect(page.getByLabel("Источник", { exact: true })).toContainText("Synthetic 10000", { timeout: 60000 });
+  await page.getByRole("link", { name: "Каталог", exact: true }).click();
+  await expect(page.locator('[data-testid^="product-"]')).toHaveCount(24);
+  await page.getByRole("button", { name: "Далее", exact: true }).click();
+  await expect(page.getByTestId("product-SYNTH-MCB-00024")).toBeVisible();
+  await page.getByLabel("Артикул, название или характеристика", { exact: true }).fill("breaker 16A");
+  await expect(page.locator(".pagination")).toContainText("50 товаров");
+  await expect(page.locator('[data-testid^="product-"]')).toHaveCount(24);
+  await page.getByLabel("Артикул, название или характеристика", { exact: true }).fill("SYNTH-MCB-09876");
+  await expect(page.locator('[data-testid^="product-"]')).toHaveCount(1);
+  await expect(page.getByTestId("product-SYNTH-MCB-09876")).toBeVisible();
+});
+
