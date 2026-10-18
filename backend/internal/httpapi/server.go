@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -56,7 +57,7 @@ func New(db *storage.Store, cfg config.Config) *App {
 }
 func Session(r *http.Request) string { return r.Context().Value(sessionKey{}).(string) }
 func (a *App) Handler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return observe(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
 		w.Header().Set("X-Frame-Options", "DENY")
@@ -99,8 +100,9 @@ func (a *App) Handler() http.Handler {
 			}
 			http.SetCookie(w, &http.Cookie{Name: "volt_session", Value: session, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode, Secure: r.TLS != nil, MaxAge: 60 * 60 * 24 * 30})
 		}
-		a.Mux.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), sessionKey{}, session)))
-	})
+		*r = *r.WithContext(context.WithValue(r.Context(), sessionKey{}, session))
+		a.Mux.ServeHTTP(w, r)
+	}))
 }
 func write(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -135,7 +137,7 @@ func (a *App) dataset(w http.ResponseWriter, r *http.Request) (string, bool) {
 	return d, true
 }
 func internal(w http.ResponseWriter, err error) {
-	slog.Error("request failed", "error_type", strings.SplitN(err.Error(), ":", 2)[0])
+	slog.Error("request failed", "request_id", w.Header().Get("X-Request-ID"), "error_type", fmt.Sprintf("%T", err))
 	fail(w, 500, "internal", "Operation failed. Please retry.")
 }
 func (a *App) datasets(w http.ResponseWriter, r *http.Request) {
