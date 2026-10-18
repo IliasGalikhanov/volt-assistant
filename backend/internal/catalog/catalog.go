@@ -185,6 +185,12 @@ func Normalize(s string) string {
 var synonyms = map[string]string{"автомат": "breaker", "автоматы": "breaker", "выключатель": "breaker", "ажыратқыш": "breaker", "кабель": "cable", "сым": "cable", "провод": "cable", "лампа": "lamp", "шам": "lamp", "лампы": "lamp"}
 
 func Search(products []Product, query, category string) []Product {
+	// An explicit article identifies one product, never a prefix-related article.
+	for _, p := range products {
+		if strings.EqualFold(strings.TrimSpace(query), p.SKU) && (category == "" || p.Category == category) {
+			return []Product{p}
+		}
+	}
 	terms := strings.Fields(Normalize(query))
 	for i, t := range terms {
 		if v, ok := synonyms[t]; ok {
@@ -205,12 +211,28 @@ func Search(products []Product, query, category string) []Product {
 		for _, n := range p.Names {
 			hay += " " + Normalize(n)
 		}
+		for field, unit := range map[string]string{"current_a": "a", "voltage_v": "v", "power_w": "w", "section_mm2": "mm2"} {
+			if value := p.Attributes[field]; value != "" {
+				hay += " " + Normalize(value+unit)
+			}
+		}
+		tokens := strings.Fields(hay)
 		score := 0
 		if strings.EqualFold(strings.TrimSpace(query), p.SKU) {
 			score = 1000
 		} else {
 			for _, t := range terms {
-				if strings.Contains(hay, t) {
+				matches := strings.Contains(hay, t)
+				if unicode.IsDigit([]rune(t)[0]) {
+					matches = false
+					for _, token := range tokens {
+						if token == t {
+							matches = true
+							break
+						}
+					}
+				}
+				if matches {
 					score++
 				}
 			}
