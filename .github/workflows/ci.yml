@@ -7,21 +7,23 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: volt
-          POSTGRES_PASSWORD: ci-only
-          POSTGRES_DB: volt_test
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U volt -d volt_test"
-          --health-interval 3s --health-timeout 3s --health-retries 20
-    env:
-      TEST_DATABASE_URL: postgres://volt:ci-only@localhost:5432/volt_test?sslmode=disable
     steps:
       - uses: actions/checkout@v4
+      - name: Create isolated database credentials
+        shell: bash
+        run: |
+          db_password=$(openssl rand -hex 24)
+          echo "::add-mask::$db_password"
+          echo "POSTGRES_PASSWORD=$db_password" >> "$GITHUB_ENV"
+          echo "TEST_DATABASE_URL=postgres://volt:$db_password@localhost:5432/volt_test?sslmode=disable" >> "$GITHUB_ENV"
+      - name: Start test database
+        run: |
+          docker run -d --name volt-test-db -p 127.0.0.1:5432:5432 -e POSTGRES_USER=volt -e POSTGRES_DB=volt_test -e POSTGRES_PASSWORD postgres:17-alpine
+          for attempt in $(seq 1 30); do
+            if docker exec volt-test-db pg_isready -U volt -d volt_test; then exit 0; fi
+            sleep 1
+          done
+          exit 1
       - uses: actions/setup-go@v5
         with:
           go-version-file: backend/go.mod
@@ -49,6 +51,7 @@ jobs:
         working-directory: frontend
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
+      - run: python3 scripts/init_env.py
       - run: docker compose up --build --wait -d app worker
       - run: npm run test:e2e
         working-directory: frontend
