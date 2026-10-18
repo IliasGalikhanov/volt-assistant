@@ -1,0 +1,25 @@
+{
+  "allocated_bytes_per_load_search": 34029212,
+  "arch": "amd64",
+  "catalogue_json_bytes": 2619201,
+  "go": "go1.25.5",
+  "import_ms": 14276.368,
+  "load_and_search_p50_ms": 351.402,
+  "load_and_search_p95_ms": 401.876,
+  "matches": {
+    "SYNTH-MCB-09876": 1,
+    "breaker 16A": 50,
+    "breaker 999A": 0
+  },
+  "note": "Sequential local PostgreSQL reads plus Go search; not HTTP latency, peak RSS or a production throughput benchmark.",
+  "os": "windows",
+  "records": 10000,
+  "samples": 60,
+  "synthetic": true,
+  "commit": "47fe2b95acd75d3ae6a88c2f8df1466bc9f5c622",
+  "working_tree_dirty": true,
+  "machine": {
+    "system": "Windows",
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD"
+  }
+}

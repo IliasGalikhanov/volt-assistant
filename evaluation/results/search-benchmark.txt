@@ -1,0 +1,9 @@
+goos: windows
+goarch: amd64
+pkg: github.com/IliasGalikhanov/volt-assistant/backend/internal/catalog
+cpu: AMD Ryzen 5 5600H with Radeon Graphics         
+BenchmarkSearch10000/SYNTH-MCB-09876-12         	      10	    255160 ns/op	     176 B/op	       1 allocs/op
+BenchmarkSearch10000/breaker_16A-12             	      10	 140784240 ns/op	13591728 B/op	  290064 allocs/op
+BenchmarkSearch10000/breaker_999A-12            	      10	 152821970 ns/op	13538588 B/op	  290046 allocs/op
+PASS
+ok  	github.com/IliasGalikhanov/volt-assistant/backend/internal/catalog	4.684s
