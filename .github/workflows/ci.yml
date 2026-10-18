@@ -55,6 +55,8 @@ jobs:
       - run: docker compose up --build --wait -d app worker
       - run: npm run test:e2e
         working-directory: frontend
+      - run: npm run test:dev
+        working-directory: frontend
       - name: Restart without losing data
         run: python3 scripts/persistence_check.py
       - name: Container logs
