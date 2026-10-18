@@ -27,9 +27,11 @@ flowchart LR
 | `ollama` | Structured local model requests, timeout and response parsing |
 | `ekt` | Fixed-host, read-only supplier adapter with unverified fields withheld |
 | `httpapi` | Session ownership, CSRF, input limits, HTTP contract, exports and static files |
-| `storage` | pgx pool, bootstrap schema migration under a transaction advisory lock |
+| `storage` | pgx pool, ordered, atomic forward migrations under a transaction advisory lock |
 
-Frontend components include accessible modal focus handling, product cards and specification review. `App.tsx` currently owns page orchestration and state; extracting page containers is a natural next refactor if this scope grows. Dataset changes cancel stale fetches. Theme, language and selected dataset preferences use localStorage; business data does not.
+Frontend pages live in `src/pages`; dialogs are independent components. `useWorkspaceData` manages initial reads, cancellation and polling; `useCatalogueFilter` delegates query semantics to the API; `useReviewDraft` loads and saves revisioned edits. App coordinates navigation and selected dialogs. Theme, language and selected dataset preferences use localStorage; business data stays in PostgreSQL. Catalogue pages render at most 24 cards while the complete bounded dataset remains available for selection.
+
+Review drafts are separate from extracted rows. PUT includes the last observed draft revision; a stale tab receives HTTP 409 and keeps its local edits visible. Save draft is explicit, and preparing a proposal saves first. Unsaved edits trigger a close/reload warning. Changing warehouse invalidates acknowledgement.
 
 ## Data and transactions
 
@@ -39,7 +41,7 @@ Cart proposal creation validates SKU, warehouse, positive quantity, pack multipl
 
 Catalog imports create a new dataset; they never mutate the active version in place. Import confirmation locks its job and creates the dataset in the same transaction. Repeating it returns the already-created dataset. A failed import leaves existing data unchanged.
 
-Worker claims a queued or expired job with `FOR UPDATE SKIP LOCKED`, assigns a two-minute lease and increments attempts. Repeatedly interrupted jobs fail after three attempts. Successful processing produces `review`; catalogue confirmation produces `completed`. Errors remain visible in `failed`. Original filenames are metadata only; stored paths are generated. The initial schema is version 1; future schema changes need explicit forward migrations, not edits that assume `CREATE TABLE IF NOT EXISTS` alters existing tables.
+Worker claims a queued or expired job with `FOR UPDATE SKIP LOCKED`, assigns a two-minute lease and increments attempts. Repeatedly interrupted jobs fail after three attempts. Successful processing produces `review`; catalogue confirmation produces `completed`. Errors remain visible in `failed`. Original filenames are metadata only; stored paths are generated. Worker completion is conditional on the claimed attempt number, so a late expired worker cannot overwrite a replacement result. Cancellation leaves the lease recoverable. SQL migrations 001 and 002 support both fresh installation and upgrade from the original version-one database; newer unsupported versions are rejected. Failed upgrades roll back atomically.
 
 ## Model role and limits
 
@@ -52,3 +54,14 @@ Search and attribute rules run in memory after loading a dataset, bounded at 10 
 ## Deployment
 
 One multi-stage image contains two Go binaries, the built UI and Poppler. Runtime uses an unprivileged user. Compose runs app, worker and PostgreSQL with durable named volumes and loopback ports; Ollama is a separate opt-in profile. NVIDIA support is an explicit override. Healthchecks test database connectivity through the app. Backend integration tests use a separate ephemeral PostgreSQL in CI; application tests build and run Compose from the checkout.
+
+## Diagnostics
+
+API responses carry X-Request-ID. Logs include request ID, route pattern, status and duration; worker events include job ID, attempt, duration, error code and whether the result was applied. Bodies, queries, cookies and uploaded filenames are excluded. Health polling is quiet. UI error messages are localized by stable error code.
+
+## Decision records
+
+- [Go and PostgreSQL queue](decisions/001-go-and-postgres.md)
+- [Model authority and failure modes](decisions/002-model-boundary.md)
+- [Drafts and migrations](decisions/003-review-and-migrations.md)
+- [Local runtime and catalogue scale](decisions/004-local-runtime-and-scale.md)
