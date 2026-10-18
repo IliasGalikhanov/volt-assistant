@@ -1,0 +1,425 @@
+{
+  "synthetic": true,
+  "started_at": "2026-10-18T12:25:40.220662+00:00",
+  "commit": "37dad80a2f5569078a29da084327bca83072cbd4",
+  "records": [
+    {
+      "file": "semicolon.csv",
+      "mode": "off",
+      "expected_status": "review",
+      "actual_status": "review",
+      "expected_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "actual_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "exact_match": true,
+      "seconds": 1.047,
+      "row_precision": 1.0,
+      "row_recall": 1.0,
+      "error_code": ""
+    },
+    {
+      "file": "rows.json",
+      "mode": "off",
+      "expected_status": "review",
+      "actual_status": "review",
+      "expected_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "actual_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "exact_match": true,
+      "seconds": 1.062,
+      "row_precision": 1.0,
+      "row_recall": 1.0,
+      "error_code": ""
+    },
+    {
+      "file": "table.docx",
+      "mode": "off",
+      "expected_status": "review",
+      "actual_status": "review",
+      "expected_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "actual_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "exact_match": true,
+      "seconds": 1.078,
+      "row_precision": 1.0,
+      "row_recall": 1.0,
+      "error_code": ""
+    },
+    {
+      "file": "table.xlsx",
+      "mode": "off",
+      "expected_status": "review",
+      "actual_status": "review",
+      "expected_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "actual_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "exact_match": true,
+      "seconds": 1.031,
+      "row_precision": 1.0,
+      "row_recall": 1.0,
+      "error_code": ""
+    },
+    {
+      "file": "text.pdf",
+      "mode": "off",
+      "expected_status": "review",
+      "actual_status": "review",
+      "expected_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "actual_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "exact_match": true,
+      "seconds": 1.063,
+      "row_precision": 1.0,
+      "row_recall": 1.0,
+      "error_code": ""
+    },
+    {
+      "file": "invalid-quantity.csv",
+      "mode": "off",
+      "expected_status": "failed",
+      "actual_status": "failed",
+      "expected_rows": [],
+      "actual_rows": [],
+      "exact_match": true,
+      "seconds": 1.047,
+      "row_precision": 1,
+      "row_recall": 1,
+      "error_code": "invalid_file"
+    },
+    {
+      "file": "clean.png",
+      "mode": "primary",
+      "expected_status": "review",
+      "actual_status": "review",
+      "expected_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "actual_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "exact_match": true,
+      "seconds": 80.11,
+      "row_precision": 1.0,
+      "row_recall": 1.0,
+      "error_code": ""
+    },
+    {
+      "file": "rotated.png",
+      "mode": "primary",
+      "expected_status": "review",
+      "actual_status": "review",
+      "expected_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "actual_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "exact_match": true,
+      "seconds": 75.86,
+      "row_precision": 1.0,
+      "row_recall": 1.0,
+      "error_code": ""
+    },
+    {
+      "file": "low-contrast.png",
+      "mode": "primary",
+      "expected_status": "review",
+      "actual_status": "review",
+      "expected_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "actual_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "exact_match": true,
+      "seconds": 74.86,
+      "row_precision": 1.0,
+      "row_recall": 1.0,
+      "error_code": ""
+    },
+    {
+      "file": "untrusted-note.png",
+      "mode": "primary",
+      "expected_status": "review",
+      "actual_status": "review",
+      "expected_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "actual_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "exact_match": true,
+      "seconds": 70.141,
+      "row_precision": 1.0,
+      "row_recall": 1.0,
+      "error_code": ""
+    },
+    {
+      "file": "clean.png",
+      "mode": "fallback",
+      "expected_status": "review",
+      "actual_status": "review",
+      "expected_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "actual_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "exact_match": true,
+      "seconds": 61.344,
+      "row_precision": 1.0,
+      "row_recall": 1.0,
+      "error_code": ""
+    },
+    {
+      "file": "rotated.png",
+      "mode": "fallback",
+      "expected_status": "review",
+      "actual_status": "review",
+      "expected_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "actual_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "exact_match": true,
+      "seconds": 50.735,
+      "row_precision": 1.0,
+      "row_recall": 1.0,
+      "error_code": ""
+    },
+    {
+      "file": "low-contrast.png",
+      "mode": "fallback",
+      "expected_status": "review",
+      "actual_status": "review",
+      "expected_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "actual_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "exact_match": true,
+      "seconds": 46.438,
+      "row_precision": 1.0,
+      "row_recall": 1.0,
+      "error_code": ""
+    },
+    {
+      "file": "untrusted-note.png",
+      "mode": "fallback",
+      "expected_status": "review",
+      "actual_status": "review",
+      "expected_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "actual_rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "exact_match": true,
+      "seconds": 49.078,
+      "row_precision": 1.0,
+      "row_recall": 1.0,
+      "error_code": ""
+    }
+  ],
+  "cart_unchanged": true,
+  "finished_at": "2026-10-18T12:35:23.595051+00:00"
+}

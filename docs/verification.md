@@ -1,46 +1,34 @@
 # Verification record
 
-All functional data below is synthetic. These checks demonstrate implementation behavior, not accuracy on the supplier's real catalog or real customer requests.
+All functional data is synthetic. This record establishes implementation behavior, not real supplier accuracy or production capacity.
 
-## Verified application
+## Current application
 
-Application commit: `89da7ac`. [GitHub Actions run 39123155229](https://github.com/IliasGalikhanov/volt-assistant/actions/runs/39123155229) completed successfully on 18 October 2026. It includes technical-unit normalization, stale-fetch cancellation, exact-article precedence and the multilingual purchase-intent regression fix.
+Code checkpoint: `37dad80`. [GitHub Actions run 39127050510](https://github.com/IliasGalikhanov/volt-assistant/actions/runs/39127050510) completed successfully, including both backend and application jobs.
 
-- Go formatting, `go vet` and `go test -race` passed in CI with PostgreSQL integration tests enabled.
-- CI built the frontend, ran npm audit, built and started the Docker services, passed Playwright and verified data after restart.
-- Local Docker build and healthchecks passed after Docker Desktop was updated.
-- All three Playwright scenarios passed locally against the rebuilt Docker app (23.6 seconds in that run): reviewed specification/substitution/confirmation/export; three languages/theme/mobile/offline chat; isolated catalogue import. The subsequent chat-only regression fix also passed the same application suite in CI.
-- The manual browser workflow selected `DEMO-MCB-002` as a replacement, confirmed 3 breakers, 10 metres of cable and 4 lamps, and produced a 15 890 KZT cart. Reloading the same browser after the service restart retained these exact lines. See [cart screenshot](screenshots/cart.png).
-- `scripts/persistence_check.py` confirmed an exact cart snapshot before and after restarting app, worker and PostgreSQL. This script is run separately from browser tests because restarting the application intentionally interrupts requests.
+- All 30 Go test functions are included in CI's `go test -race -count=1 -timeout=120s ./...`, with an isolated PostgreSQL database. Local `go vet` and Go tests passed; Poppler-dependent unit coverage is also exercised by the Docker document pipeline.
+- New migration tests upgrade the original version-one schema without losing a session, serialize concurrent startup, roll back invalid migration SQL and reject unsupported newer schemas.
+- Worker integration tests cancel an active model-backed job, expire its lease and recover it; race eight claimers; reject a late worker's overwrite; and fail exhausted attempts. The recovery tests control lease timestamps instead of waiting for a real lease to expire. This is not a claim that every possible process/OS failure was tested.
+- Draft tests cover session isolation, stale revisions, invalid quantities, preservation of the original extraction and an unchanged cart.
+- Five Playwright scenarios passed against the final local Docker image in **41.0 seconds**: specification/substitution/confirmation/export; languages/theme/mobile/offline chat; isolated catalogue import; draft restoration and stale-tab conflict; 10,000 products with pagination, exact numeric search and bounded review choices.
+- Four core browser scenarios also passed through Vite in 32.3 seconds after fixing its Host forwarding. CI separately runs a development-proxy scenario so CSRF protection stays enabled in both modes.
+- Docker rebuilt successfully and app/database healthchecks passed. The image contains the current Go server, worker and compiled frontend.
+- The enhanced persistence script compared the exact confirmed cart and the exact saved draft/revision before and after restarting **app, worker and PostgreSQL**. Both were unchanged.
+- Manual inspection in the built-in browser confirmed that the rebuilt application's `автомат 16А` search returned only the two 16A demo articles.
+- The recorded browser walkthrough checked that the cart was empty before explicit confirmation, then contained the expected lines, exported CSV and restored its state after reload. It is a recording of actual UI interactions, with synthetic data only.
 
-The backend contains 21 test functions. Integration coverage includes concurrent duplicate confirmation, price/revision conflicts, session isolation, CSRF rejection, atomic/idempotent catalogue import, unavailable-model fallback, CSV formula escaping, read-only supplier products, upload filename traversal and preservation of explicit articles/delivery intent against an incorrect model plan. Unit coverage includes category compatibility, quantity/pack checks, multilingual search, structured-document parsing and malformed Ollama responses.
+The CPU-vision deadline fix (`37dad80`) adds a transport-level deadline test for text, images and an earlier parent deadline, including context cancellation on completion. The final rebuilt image passed all 14 expected document outcomes: six deterministic cases and four images for each model. 4B images took 70–80 seconds; 2B took 46–61 seconds. The cart was unchanged. The original eight 55-second image failures are retained alongside the repeat.
 
-## Local model observations
+## Evaluation and measurements
 
-Hardware used: Windows with Docker Desktop Linux containers, NVIDIA RTX 3050 Laptop 4 GiB VRAM, approximately 14 GiB host RAM; Docker had approximately 6.7 GiB available. Ollama 0.40.6, model `qwen3.5:4b-q4_K_M`, digest prefix `d8b0f5e9760c`, context 4096.
+See the [evaluation report](evaluation.md), [raw query responses](../evaluation/results/local.json), [document results](../evaluation/results/documents.json) and [catalogue measurements](../evaluation/results/catalogue-benchmark.json).
 
-- The real model was downloaded successfully, separate from Git.
-- Automatic offload reported 44% CPU / 56% GPU. Initial warmup took 150.6 seconds; subsequent application requests still reached the 55-second timeout in the observed hybrid run.
-- A direct CPU request with `num_gpu: 0` returned valid JSON for a synthetic search instruction. Total duration was 116.22 seconds, of which 106.11 seconds was loading (about 10 seconds for the remainder).
-- With the integrated CPU configuration and a warm model, `scripts/model_smoke.py` passed all four assertions below and verified that the cart remained unchanged. Every response reported the actual Qwen model, with no unavailable-model warning.
+The 72-query comparison used backend `3d5fa62` before the later independent numeric-search fix. It is retained as a versioned baseline rather than presented as an unperformed rerun of the final code. The final search has its own 10,000-record regression and end-to-end browser check.
 
-| Synthetic query | Verified result | Observed seconds |
-| --- | --- | --- |
-| Нужен автомат 16А для щитка | DEMO-MCB-001 and DEMO-MCB-002 | 7.27 |
-| Покажи DEMO-MCB-002 | Exact article only | 7.62 |
-| Қандай жеткізу шарттары бар? | Grounded Kazakh demo delivery terms, no products | 7.05 |
-| Find a 16A breaker | DEMO-MCB-001 and DEMO-MCB-002 | 5.59 |
+Model measurements use local Ollama, without paid APIs or model training. Both primary and fallback tags were actually downloaded and evaluated. No claim is made about unseen real customer traffic. The evaluation retains incorrect matches and timeout fallbacks.
 
-The first integrated run exposed an incorrect model search intent for the Kazakh delivery question. The fix keeps explicit server-recognized delivery/payment intent authoritative and has a mocked-model integration regression test. The model interprets the query; response wording and business facts still come from localized server templates and catalogue records.
+## Public-artifact review
 
-The same Russian query was sent manually through the browser interface after the final rebuild; both correct product cards appeared without a fallback warning. See [Qwen chat screenshot](screenshots/qwen-chat.png).
+The repository contains only newly generated synthetic document fixtures. Original hackathon documents, supplier credentials, local `.env`, database files/dumps and model weights remain excluded. The source restrictions are described in [data rights](data-rights.md). API and worker logs omit request bodies, queries, cookies and uploaded filenames.
 
-These are isolated smoke observations, not a benchmark. No claim is made about general Kazakh language quality, arbitrary document-recognition accuracy, throughput or business impact. 2B is selectable but has not been downloaded or evaluated on this installation.
-
-## Practical limits
-
-Final Docker rebuild and healthchecks passed, and the persisted cart survived another app/worker/database restart. The earlier automatic-approval connection failure was resolved after restarting Codex; it is no longer a validation blocker. Restart checks must not overlap active model or browser requests, since stopping the server intentionally interrupts connections.
-
-Image extraction was checked through upload → persisted worker job → Qwen vision → review result using [this explicitly synthetic image](fixtures/specification.png). In 49.41 seconds it returned exactly `DEMO-MCB-002 × 3` and `DEMO-CBL-002 × 10`, with `review_required: true`. This clean printed fixture does not establish quality on phone photos, handwriting or arbitrary real specifications; CPU image requests may approach the 55-second timeout.
-
-Arbitrary real specifications and the full supplier adapter have not passed a representative end-to-end evaluation. Two source API reads were checked during analysis; that limited connectivity check is not validation of the entire supplier catalog. Text PDF support requires Poppler, scanned PDFs are unsupported, and free-layout DOCX/PDF extraction requires careful human review.
+The screenshot and video examples use the synthetic catalogue. The purchase list is not a real order. Shared-machine timing, a bounded catalogue, anonymous local sessions, limited free-layout document parsing and mandatory manual review remain explicit constraints.
