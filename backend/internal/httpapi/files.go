@@ -154,26 +154,47 @@ func (a *App) commitImport(w http.ResponseWriter, r *http.Request) {
 		fail(w, 400, "invalid_input", "Confirm import and provide a name (1..100 characters)")
 		return
 	}
+	tx, err := a.DB.Pool.Begin(r.Context())
+	if err != nil {
+		internal(w, err)
+		return
+	}
+	defer tx.Rollback(r.Context())
 	var b []byte
-	err := a.DB.Pool.QueryRow(r.Context(), "SELECT result FROM jobs WHERE id=$1 AND session_id=$2 AND dataset=$3 AND kind='catalogue' AND status='review'", r.PathValue("id"), Session(r), d).Scan(&b)
+	var status string
+	err = tx.QueryRow(r.Context(), "SELECT result,status FROM jobs WHERE id=$1 AND session_id=$2 AND dataset=$3 AND kind='catalogue' FOR UPDATE", r.PathValue("id"), Session(r), d).Scan(&b, &status)
 	if err != nil {
 		fail(w, 409, "import_not_ready", "Import not ready")
 		return
 	}
 	var result struct {
 		Products []catalog.Product `json:"products"`
+		Dataset  string            `json:"dataset,omitempty"`
 	}
 	if json.Unmarshal(b, &result) != nil {
 		fail(w, 400, "invalid_file", "Invalid parsed catalogue")
 		return
 	}
-	id, err := a.Catalog.Import(r.Context(), Session(r), in.Name, "upload", result.Products)
+	if status == "completed" && result.Dataset != "" {
+		write(w, 200, map[string]string{"dataset": result.Dataset})
+		return
+	}
+	if status != "review" {
+		fail(w, 409, "import_not_ready", "Import not ready")
+		return
+	}
+	id, err := a.Catalog.ImportTx(r.Context(), tx, Session(r), in.Name, "upload", result.Products)
 	if err != nil {
 		fail(w, 422, "invalid_catalogue", err.Error())
 		return
 	}
-	_, err = a.DB.Pool.Exec(r.Context(), "UPDATE jobs SET status='completed' WHERE id=$1 AND session_id=$2", r.PathValue("id"), Session(r))
-	if err != nil {
+	result.Dataset = id
+	b, _ = json.Marshal(result)
+	if _, err = tx.Exec(r.Context(), "UPDATE jobs SET status='completed',result=$2 WHERE id=$1", r.PathValue("id"), b); err != nil {
+		internal(w, err)
+		return
+	}
+	if err = tx.Commit(r.Context()); err != nil {
 		internal(w, err)
 		return
 	}
