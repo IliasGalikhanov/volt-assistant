@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -164,7 +165,15 @@ func (s *Service) ImportTx(ctx context.Context, tx pgx.Tx, owner, name, kind str
 	return id, nil
 }
 
+var numericUnit = regexp.MustCompile(`(?i)(\d)\s*(вт|[аaвvw])(?:\s|$)`)
+
 func Normalize(s string) string {
+	s = numericUnit.ReplaceAllStringFunc(s, func(unit string) string {
+		v := strings.ToLower(strings.ReplaceAll(strings.TrimSpace(unit), " ", ""))
+		v = strings.ReplaceAll(v, "вт", "w")
+		v = strings.ReplaceAll(v, "а", "a")
+		return strings.ReplaceAll(v, "в", "v") + " "
+	})
 	return strings.Map(func(r rune) rune {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '.' {
 			return unicode.ToLower(r)

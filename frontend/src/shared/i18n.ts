@@ -35,6 +35,9 @@ const ru = {
   attributes: "Характеристики",
   certificate: "Сертификат",
   noCertificate: "Сертификат не предоставлен",
+  unknown: "единица не подтверждена",
+  supplierUnverified:
+    "Валюта, единица и кратность поставщика не подтверждены. Доступен только просмотр.",
   source: "Источник",
   updated: "Получено",
   quantity: "Количество",
@@ -187,6 +190,9 @@ const en: Record<Key, string> = {
   attributes: "Technical attributes",
   certificate: "Certificate",
   noCertificate: "No certificate supplied",
+  unknown: "unit not verified",
+  supplierUnverified:
+    "Supplier currency, unit and pack size are unverified. Read-only catalogue.",
   source: "Source",
   updated: "Retrieved",
   quantity: "Quantity",
@@ -338,6 +344,9 @@ const kk: Record<Key, string> = {
   attributes: "Техникалық сипаттамалар",
   certificate: "Сертификат",
   noCertificate: "Сертификат берілмеген",
+  unknown: "бірлік расталмаған",
+  supplierUnverified:
+    "Жеткізушінің валютасы, бірлігі мен еселігі расталмаған. Тек көруге болады.",
   source: "Дереккөз",
   updated: "Алынған уақыт",
   quantity: "Саны",

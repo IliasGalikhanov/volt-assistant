@@ -31,3 +31,17 @@ func TestValidateRejectsInvalidMoneyStockAndUnits(t *testing.T) {
 		}
 	}
 }
+
+func TestSearchNormalizesCyrillicTechnicalUnits(t *testing.T) {
+	for _, query := range []string{"автомат 16А", "breaker 16 A", "ажыратқыш 16а"} {
+		got := Search(DemoProducts(), query, "")
+		if len(got) == 0 {
+			t.Fatalf("no matches for %q", query)
+		}
+		for _, p := range got {
+			if p.Category != "breaker" || p.Attributes["current_a"] != "16" {
+				t.Fatalf("unrelated product %s for %s", p.SKU, query)
+			}
+		}
+	}
+}

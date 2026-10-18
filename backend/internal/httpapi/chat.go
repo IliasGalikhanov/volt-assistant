@@ -101,11 +101,13 @@ func (a *App) chat(w http.ResponseWriter, r *http.Request) {
 	intent := "search"
 	mode := "search"
 	warning := ""
+	exactSKU := ""
 	// Preserve deterministic article matching even when the local model is offline.
 	for _, token := range skuPattern.FindAllString(in.Text, -1) {
 		for _, p := range all {
 			if strings.EqualFold(token, p.SKU) {
 				query = p.SKU
+				exactSKU = p.SKU
 			}
 		}
 	}
@@ -141,9 +143,11 @@ func (a *App) chat(w http.ResponseWriter, r *http.Request) {
 		} else if len(plan.Query) <= 300 && (plan.Intent == "search" || plan.Intent == "conditions") {
 			mode = model
 			intent = plan.Intent
-			if plan.Query != "" {
+			if plan.Query != "" && exactSKU == "" {
 				query = plan.Query
 			}
+		} else {
+			warning = "model_unavailable"
 		}
 	}
 	products := catalog.Search(all, query, "")

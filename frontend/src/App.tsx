@@ -139,18 +139,22 @@ export default function App() {
     setDatasets(data);
     return data;
   }, []);
-  const refresh = useCallback(async () => {
-    const [p, c, j, m] = await Promise.all([
-      api<Product[]>(`/products?${ds(dataset)}`),
-      api<Cart>(`/cart?${ds(dataset)}`),
-      api<Job[]>(`/jobs?${ds(dataset)}`),
-      api<Message[]>(`/chat?${ds(dataset)}`),
-    ]);
-    setProducts(p);
-    setCart(c);
-    setJobs(j);
-    setMessages(m);
-  }, [dataset]);
+  const refresh = useCallback(
+    async (signal?: AbortSignal) => {
+      const [p, c, j, m] = await Promise.all([
+        api<Product[]>(`/products?${ds(dataset)}`, { signal }),
+        api<Cart>(`/cart?${ds(dataset)}`, { signal }),
+        api<Job[]>(`/jobs?${ds(dataset)}`, { signal }),
+        api<Message[]>(`/chat?${ds(dataset)}`, { signal }),
+      ]);
+      if (signal?.aborted) return;
+      setProducts(p);
+      setCart(c);
+      setJobs(j);
+      setMessages(m);
+    },
+    [dataset],
+  );
   useEffect(() => {
     void loadDatasets()
       .then((data) => {
@@ -168,6 +172,7 @@ export default function App() {
   useEffect(() => {
     if (!initialized) return;
     let cancelled = false;
+    const controller = new AbortController();
     setLoading(true);
     setCompare([]);
     setProposal(null);
@@ -176,7 +181,7 @@ export default function App() {
     setQuery("");
     setCategory("");
     localStorage.setItem("volt-dataset", dataset);
-    void refresh()
+    void refresh(controller.signal)
       .catch((e) => {
         if (!cancelled) setError(String(e));
       })
@@ -185,16 +190,21 @@ export default function App() {
       });
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [dataset, initialized, refresh]);
   useEffect(() => {
     if (!initialized) return;
+    const controller = new AbortController();
     const id = window.setInterval(() => {
-      void api<Job[]>(`/jobs?${ds(dataset)}`)
+      void api<Job[]>(`/jobs?${ds(dataset)}`, { signal: controller.signal })
         .then(setJobs)
         .catch(() => {});
     }, 2500);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      controller.abort();
+    };
   }, [dataset, initialized]);
   const warehouses = useMemo(
     () => Array.from(new Set(products.flatMap((p) => Object.keys(p.stores)))),
@@ -205,7 +215,15 @@ export default function App() {
       setWarehouse(warehouses[0]);
   }, [warehouses, warehouse]);
   const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const normalize = (value: string) =>
+      value
+        .toLowerCase()
+        .replace(
+          /(\d)\s*(вт|[аaвvw])(?=\s|$)/gu,
+          (_, n: string, unit: string) =>
+            n + ({ а: "a", в: "v", вт: "w" }[unit] ?? unit),
+        );
+    const q = normalize(query.trim());
     const alias: Record<string, string> = {
       кабель: "cable",
       сым: "cable",
@@ -218,9 +236,13 @@ export default function App() {
       (p) =>
         (!category || p.category === category) &&
         (!q ||
-          `${p.sku} ${p.name} ${Object.values(p.names ?? {}).join(" ")} ${p.category} ${Object.values(p.attributes).join(" ")}`
-            .toLowerCase()
-            .includes(alias[q] ?? q)),
+          q
+            .split(/\s+/)
+            .every((term) =>
+              normalize(
+                `${p.sku} ${p.name} ${Object.values(p.names ?? {}).join(" ")} ${p.category} ${Object.values(p.attributes).join(" ")}`,
+              ).includes(alias[term] ?? term),
+            )),
     );
   }, [products, query, category]);
   async function openProduct(p: Product) {
@@ -1052,7 +1074,13 @@ export default function App() {
                 {t("stock")}: {detail.stores[warehouse] ?? 0} {t(detail.unit)}
               </p>
               <p>
-                {t("pack")}: {detail.step} {t(detail.unit)}
+                {detail.read_only ? (
+                  t("supplierUnverified")
+                ) : (
+                  <>
+                    {t("pack")}: {detail.step} {t(detail.unit)}
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -1085,6 +1113,14 @@ export default function App() {
             <br />
             {t("updated")}: {new Date(detail.fetched_at).toLocaleString()} ·{" "}
             {activeDataset?.name}
+            {detail.source_url && /^https:\/\//.test(detail.source_url) && (
+              <>
+                <br />
+                <a href={detail.source_url} target="_blank" rel="noreferrer">
+                  {t("source")}
+                </a>
+              </>
+            )}
           </p>
           <div className="detail-add">
             <label>

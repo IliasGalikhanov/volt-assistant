@@ -8,24 +8,35 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 )
 
 type Client struct {
-	URL  string
-	HTTP *http.Client
+	URL    string
+	HTTP   *http.Client
+	NumGPU *int
 }
 
 func New(url string) *Client {
-	return &Client{strings.TrimRight(url, "/"), &http.Client{Timeout: 55 * time.Second}}
+	c := &Client{URL: strings.TrimRight(url, "/"), HTTP: &http.Client{Timeout: 55 * time.Second}}
+	if n, err := strconv.Atoi(os.Getenv("OLLAMA_NUM_GPU")); err == nil && n >= 0 {
+		c.NumGPU = &n
+	}
+	return c
 }
 func (c *Client) Generate(ctx context.Context, model, prompt string, schema any, image []byte, out any) error {
 	message := map[string]any{"role": "user", "content": prompt}
 	if len(image) > 0 {
 		message["images"] = []string{base64.StdEncoding.EncodeToString(image)}
 	}
-	body, _ := json.Marshal(map[string]any{"model": model, "messages": []any{message}, "stream": false, "think": false, "format": schema, "options": map[string]any{"temperature": 0, "num_ctx": 4096, "num_predict": 700}, "keep_alive": "5m"})
+	options := map[string]any{"temperature": 0, "num_ctx": 4096, "num_predict": 700}
+	if c.NumGPU != nil {
+		options["num_gpu"] = *c.NumGPU
+	}
+	body, _ := json.Marshal(map[string]any{"model": model, "messages": []any{message}, "stream": false, "think": false, "format": schema, "options": options, "keep_alive": "10m"})
 	req, err := http.NewRequestWithContext(ctx, "POST", c.URL+"/api/chat", bytes.NewReader(body))
 	if err != nil {
 		return err
