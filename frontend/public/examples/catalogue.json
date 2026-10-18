@@ -1,0 +1,23 @@
+[
+  {
+    "sku": "USER-MCB-001",
+    "name": "Synthetic imported circuit breaker",
+    "category": "breaker",
+    "price_minor": 205000,
+    "currency": "KZT",
+    "unit": "pcs",
+    "step": 1,
+    "stores": {
+      "central": 50,
+      "north": 10
+    },
+    "attributes": {
+      "current_a": "16",
+      "poles": "1",
+      "curve": "C",
+      "voltage_v": "230",
+      "breaking_ka": "6",
+      "mount": "DIN"
+    }
+  }
+]
