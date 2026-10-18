@@ -49,7 +49,7 @@ for mode in args.modes:
         started=time.monotonic()
         job=api("/uploads",bytes(data),content_type="multipart/form-data; boundary="+boundary)
         status=None
-        while time.monotonic()-started<110:
+        while time.monotonic()-started<170:
             status=next((j for j in api("/jobs") if j["id"]==job["id"]),None)
             if status and status["status"] in ["review","failed"]:break
             time.sleep(.5)

@@ -40,7 +40,7 @@ func (w *Worker) Once(ctx context.Context) error {
 	var id, kind, path string
 	var attempt int
 	var input []byte
-	err := w.DB.Pool.QueryRow(ctx, `UPDATE jobs SET status='running',attempts=attempts+1,lease_until=now()+interval '2 minutes'
+	err := w.DB.Pool.QueryRow(ctx, `UPDATE jobs SET status='running',attempts=attempts+1,lease_until=now()+interval '3 minutes'
  WHERE id=(SELECT id FROM jobs WHERE (status='queued' OR (status='running' AND lease_until<now())) AND attempts<3 ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1)
  RETURNING id,kind,filename,result,attempts`).Scan(&id, &kind, &path, &input, &attempt)
 	if err == pgx.ErrNoRows {
@@ -52,7 +52,7 @@ func (w *Worker) Once(ctx context.Context) error {
 	}
 	started := time.Now()
 	slog.Info("job started", "job_id", id, "kind", kind, "attempt", attempt)
-	taskCtx, cancel := context.WithTimeout(ctx, 90*time.Second)
+	taskCtx, cancel := context.WithTimeout(ctx, 150*time.Second)
 	defer cancel()
 	var options struct {
 		Mapping   map[string]string `json:"mapping"`

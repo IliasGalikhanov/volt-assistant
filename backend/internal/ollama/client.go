@@ -21,13 +21,21 @@ type Client struct {
 }
 
 func New(url string) *Client {
-	c := &Client{URL: strings.TrimRight(url, "/"), HTTP: &http.Client{Timeout: 55 * time.Second}}
+	c := &Client{URL: strings.TrimRight(url, "/"), HTTP: &http.Client{}}
 	if n, err := strconv.Atoi(os.Getenv("OLLAMA_NUM_GPU")); err == nil && n >= 0 {
 		c.NumGPU = &n
 	}
 	return c
 }
 func (c *Client) Generate(ctx context.Context, model, prompt string, schema any, image []byte, out any) error {
+	// CPU vision encoding needs more time than a short chat request. The caller's
+	// earlier deadline or cancellation still wins over either operation budget.
+	timeout := 55 * time.Second
+	if len(image) > 0 {
+		timeout = 120 * time.Second
+	}
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 	message := map[string]any{"role": "user", "content": prompt}
 	if len(image) > 0 {
 		message["images"] = []string{base64.StdEncoding.EncodeToString(image)}

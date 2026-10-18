@@ -36,6 +36,8 @@ Qwen is useful for interpreting free text and images, but its output is not trus
 
 **A valid JSON response still had the wrong intent.** The earlier Kazakh delivery regression showed that schema-constrained generation alone is insufficient. Recognized purchase terms remain authoritative on the server.
 
+**Vision exhausted the chat deadline.** The first four image fixtures exceeded 55 seconds on CPU. Image calls now have a separate 120-second budget, bounded by a 150-second worker task and a 180-second lease. The baseline failures and repeat observations are published; a larger deadline is not a claim of perfect extraction.
+
 ## Evidence, not a feature count
 
 - [Verification record](verification.md): test and CI evidence.
