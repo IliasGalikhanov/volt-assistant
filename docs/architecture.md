@@ -1,11 +1,54 @@
 # Architecture
 
-Volt uses a modular Go monolith with two entry points: HTTP server and background worker. React communicates with the server on the same origin. PostgreSQL stores catalogues, sessions, specifications, proposals, carts and durable jobs; uploads use a separate volume. Ollama runs independently and is called over HTTP.
+Volt is a Go modular monolith with two executables: HTTP server and background worker. React/TypeScript is served by the same server. PostgreSQL holds durable state; Ollama is optional. This keeps deployment small while allowing document parsing to run outside HTTP requests. There is no Redis, vector database, Python inference service or model training pipeline.
 
-Business modules own catalogue search, category-specific alternatives, specification review and confirmed cart changes. Model output and uploaded content are untrusted input. Prices and stock always come from catalogue records. A cart proposal binds the exact lines, dataset, session and cart revision; confirmation revalidates it transactionally and is idempotent.
+```mermaid
+flowchart LR
+  UI[React / TypeScript] -->|same-origin JSON + cookie| API[Go net/http]
+  API --> PG[(PostgreSQL)]
+  API --> Files[(Upload volume)]
+  Worker[Go worker] --> PG
+  Worker --> Files
+  Worker --> Poppler[pdftotext]
+  Worker -->|image to reviewed rows| Ollama[Local Qwen3.5]
+  API -->|query extraction only| Ollama
+  API -->|optional read-only HTTPS| Supplier[ekt.kz API]
+```
 
-Demo, uploaded and supplier catalogues are separate datasets. Supplier access is read-only. A local cart does not reserve supplier stock or create an order.
+## Boundaries
 
-Documents are processed asynchronously with bounded size and execution time. Failed imports must not replace an active catalogue. Database migrations and persistent Docker volumes make restarts reproducible.
+| Module | Responsibility |
+| --- | --- |
+| `catalog` | Product validation, immutable dataset imports, deterministic search and synthetic seed |
+| `alternatives` | Category-specific compatibility candidates with explicit matched/different attributes |
+| `cart` | Quantity/stock/price checks, proposals, transactional and idempotent confirmations |
+| `documents` | Bounded CSV/JSON/XLSX/DOCX/text-PDF parsing |
+| `jobs` | Persistent queue, processing leases, reviewed extraction results and errors |
+| `ollama` | Structured local model requests, timeout and response parsing |
+| `ekt` | Fixed-host, read-only supplier adapter with unverified fields withheld |
+| `httpapi` | Session ownership, CSRF, input limits, HTTP contract, exports and static files |
+| `storage` | pgx pool, bootstrap schema migration under a transaction advisory lock |
 
-No accounts, payment processing, public deployment or training on private supplier data are in scope.
+Frontend components include accessible modal focus handling, product cards and specification review. `App.tsx` currently owns page orchestration and state; extracting page containers is a natural next refactor if this scope grows. Dataset changes cancel stale fetches. Theme, language and selected dataset preferences use localStorage; business data does not.
+
+## Data and transactions
+
+PostgreSQL tables: `sessions`, `datasets`, `products`, `carts`, `proposals`, `messages`, `jobs`, `schema_migrations`. Flexible product attributes and snapshots use JSONB; ownership, IDs, revisions and queue state use relational columns and foreign keys. Dataset ID is part of product/cart lookup. User datasets belong to one random 192-bit cookie session. Only the synthetic dataset is shared.
+
+Cart proposal creation validates SKU, warehouse, positive quantity, pack multiple, stock, currency and price. The proposal stores the complete resulting cart and its revision, expires after ten minutes, and cannot itself mutate the cart. Confirmation locks the cart and proposal, checks ownership/revision/expiry, locks current product records, rechecks the quoted values and commits cart plus proposal status together. Repeating the same confirmation returns the current cart without adding quantities again. No warehouse stock is reserved.
+
+Catalog imports create a new dataset; they never mutate the active version in place. Import confirmation locks its job and creates the dataset in the same transaction. Repeating it returns the already-created dataset. A failed import leaves existing data unchanged.
+
+Worker claims a queued or expired job with `FOR UPDATE SKIP LOCKED`, assigns a two-minute lease and increments attempts. Repeatedly interrupted jobs fail after three attempts. Successful processing produces `review`; catalogue confirmation produces `completed`. Errors remain visible in `failed`. Original filenames are metadata only; stored paths are generated. The initial schema is version 1; future schema changes need explicit forward migrations, not edits that assume `CREATE TABLE IF NOT EXISTS` alters existing tables.
+
+## Model role and limits
+
+Qwen receives the current user request and the previous assistant's displayed product names/SKUs. It returns a constrained `{query,intent}` plan; only `search` and `conditions` intents are accepted. Catalog search supplies actual product records, and localized server templates render the reply. The model cannot set prices, reserve stock, execute arbitrary tools or confirm cart changes. An exact user-supplied article takes precedence over a rewritten model query.
+
+Image extraction returns `{rows:[{query,quantity}]}` for human correction. Model/schema errors and unavailable Ollama do not disable catalog browsing or manual specification workflows. Model calls use a bounded context and a 55-second timeout. This is a constrained procurement assistant, not an unrestricted conversational agent or engineering authority. No embeddings are necessary for the current bounded catalog scope.
+
+Search and attribute rules run in memory after loading a dataset, bounded at 10 000 records. A much larger live catalog would require indexed server search, incremental synchronization, a documented supplier mapping and rate-limit policy. No claims about production-scale throughput are made.
+
+## Deployment
+
+One multi-stage image contains two Go binaries, the built UI and Poppler. Runtime uses an unprivileged user. Compose runs app, worker and PostgreSQL with durable named volumes and loopback ports; Ollama is a separate opt-in profile. NVIDIA support is an explicit override. Healthchecks test database connectivity through the app. Backend integration tests use a separate ephemeral PostgreSQL in CI; application tests build and run Compose from the checkout.
