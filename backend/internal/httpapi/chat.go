@@ -142,7 +142,10 @@ func (a *App) chat(w http.ResponseWriter, r *http.Request) {
 			warning = "model_unavailable"
 		} else if len(plan.Query) <= 300 && (plan.Intent == "search" || plan.Intent == "conditions") {
 			mode = model
-			intent = plan.Intent
+			// Explicit delivery/payment terms remain authoritative across languages.
+			if intent != "conditions" {
+				intent = plan.Intent
+			}
 			if plan.Query != "" && exactSKU == "" {
 				query = plan.Query
 			}

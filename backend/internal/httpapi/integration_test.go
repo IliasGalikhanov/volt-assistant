@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -279,5 +280,24 @@ func TestMultipartTraversalCannotChooseStoragePath(t *testing.T) {
 	files, _ := os.ReadDir(f.app.Config.UploadDir)
 	if len(files) != 1 || filepath.Ext(files[0].Name()) != ".csv" || files[0].Name() == "outside.csv" {
 		t.Fatal(files)
+	}
+}
+
+func TestModelCannotOverrideExplicitConditionsOrArticle(t *testing.T) {
+	f := setup(t)
+	model := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"message": map[string]string{"content": `{"query":"DEMO-LED-002","intent":"search"}`}})
+	}))
+	defer model.Close()
+	f.app.Config.OllamaURL = model.URL
+	var reply chatMessage
+	f.request("POST", "/api/chat", map[string]string{"text": "Қандай жеткізу шарттары бар?", "language": "kk", "mode": "primary"}, 200, &reply)
+	if !strings.Contains(reply.Text, "Демо шарттары") || len(reply.Products) != 0 {
+		t.Fatal("model overrode explicit delivery intent", reply)
+	}
+	reply = chatMessage{}
+	f.request("POST", "/api/chat", map[string]string{"text": "Покажи DEMO-MCB-002", "language": "ru", "mode": "primary"}, 200, &reply)
+	if len(reply.Products) != 1 || reply.Products[0].SKU != "DEMO-MCB-002" {
+		t.Fatal("model replaced explicit article", reply)
 	}
 }
