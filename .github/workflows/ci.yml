@@ -57,6 +57,8 @@ jobs:
         working-directory: frontend
       - run: npm run test:dev
         working-directory: frontend
+      - name: Structured document fixtures
+        run: python3 scripts/evaluate_documents.py --modes off --strict
       - name: Restart without losing data
         run: python3 scripts/persistence_check.py
       - name: Container logs

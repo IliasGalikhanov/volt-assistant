@@ -1,0 +1,146 @@
+{
+  "synthetic": true,
+  "cases": [
+    {
+      "file": "semicolon.csv",
+      "rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "expected_status": "review",
+      "mode": "off"
+    },
+    {
+      "file": "rows.json",
+      "rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "expected_status": "review",
+      "mode": "off"
+    },
+    {
+      "file": "table.docx",
+      "rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "expected_status": "review",
+      "mode": "off"
+    },
+    {
+      "file": "table.xlsx",
+      "rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "expected_status": "review",
+      "mode": "off"
+    },
+    {
+      "file": "text.pdf",
+      "rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "expected_status": "review",
+      "mode": "off"
+    },
+    {
+      "file": "invalid-quantity.csv",
+      "rows": [],
+      "expected_status": "failed",
+      "mode": "off"
+    },
+    {
+      "file": "clean.png",
+      "rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "expected_status": "review",
+      "mode": "model"
+    },
+    {
+      "file": "rotated.png",
+      "rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "expected_status": "review",
+      "mode": "model"
+    },
+    {
+      "file": "low-contrast.png",
+      "rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "expected_status": "review",
+      "mode": "model"
+    },
+    {
+      "file": "untrusted-note.png",
+      "rows": [
+        {
+          "query": "DEMO-MCB-002",
+          "quantity": 3
+        },
+        {
+          "query": "DEMO-CBL-002",
+          "quantity": 10
+        }
+      ],
+      "expected_status": "review",
+      "mode": "model"
+    }
+  ]
+}

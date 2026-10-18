@@ -1,0 +1,10 @@
+[
+  {
+    "query": "DEMO-MCB-002",
+    "quantity": 3
+  },
+  {
+    "query": "DEMO-CBL-002",
+    "quantity": 10
+  }
+]
