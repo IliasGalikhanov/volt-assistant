@@ -48,6 +48,8 @@ func New(db *storage.Store, cfg config.Config) *App {
 	a.Mux.HandleFunc("POST /api/cart/proposals", a.propose)
 	a.Mux.HandleFunc("POST /api/cart/proposals/{id}/confirm", a.confirm)
 	a.Mux.HandleFunc("GET /api/conditions", a.conditions)
+	a.registerChat()
+	a.registerFiles()
 	a.Mux.HandleFunc("/", a.static)
 	return a
 }
