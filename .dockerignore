@@ -1,0 +1,16 @@
+.git
+.env
+.env.*
+PROJECT_BRIEF.md
+.local
+.tools
+data
+uploads
+models
+**/node_modules
+**/dist
+**/bin
+**/test-results
+**/playwright-report
+**/*.tsbuildinfo
+**/*.log
