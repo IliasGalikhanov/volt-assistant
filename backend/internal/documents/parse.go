@@ -173,6 +173,7 @@ func docx(path string) (string, error) {
 		d := xml.NewDecoder(io.LimitReader(r, 20<<20))
 		var b strings.Builder
 		inText := false
+		tableRow := false
 		for {
 			t, e := d.Token()
 			if e == io.EOF {
@@ -183,6 +184,9 @@ func docx(path string) (string, error) {
 			}
 			switch v := t.(type) {
 			case xml.StartElement:
+				if v.Name.Local == "tr" {
+					tableRow = true
+				}
 				if v.Name.Local == "t" {
 					inText = true
 				}
@@ -197,8 +201,15 @@ func docx(path string) (string, error) {
 				if v.Name.Local == "tc" {
 					b.WriteByte('\t')
 				}
-				if v.Name.Local == "tr" || v.Name.Local == "p" {
+				if v.Name.Local == "tr" {
 					b.WriteByte('\n')
+					tableRow = false
+				} else if v.Name.Local == "p" {
+					if tableRow {
+						b.WriteByte(' ')
+					} else {
+						b.WriteByte('\n')
+					}
 				}
 			}
 		}

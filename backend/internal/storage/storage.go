@@ -36,6 +36,7 @@ func Open(ctx context.Context, url string) (*Store, error) {
 		_, err = tx.Exec(ctx, schema)
 	}
 	if err != nil {
+		_ = tx.Rollback(context.Background())
 		p.Close()
 		return nil, err
 	}

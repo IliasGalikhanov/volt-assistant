@@ -111,6 +111,9 @@ func (s *Service) quote(ctx context.Context, dataset string, items []Selection) 
 			return nil, err
 		}
 		out = append(out, Line{i, p.Name, p.PriceMinor, p.Currency, p.Unit})
+		if total(out) > 1_000_000_000_000 {
+			return nil, fmt.Errorf("cart total exceeds supported limit")
+		}
 	}
 	return out, nil
 }
