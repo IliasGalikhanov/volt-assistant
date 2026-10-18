@@ -28,7 +28,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { api, ds, post } from "./shared/api";
-import { money, productName, translator } from "./shared/i18n";
+import { money, productName, translator, productPrice } from "./shared/i18n";
 import type {
   Alternative,
   Cart,
@@ -334,7 +334,7 @@ export default function App() {
                           <tr key={p.sku}>
                             <td>{p.sku}</td>
                             <td>{p.name}</td>
-                            <td>{money(p.price_minor, lang)}</td>
+                            <td>{productPrice(p, lang)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -747,7 +747,7 @@ export default function App() {
                                 >
                                   <strong>{productName(p, lang)}</strong>
                                   <span>{p.sku}</span>
-                                  <b>{money(p.price_minor, lang)}</b>
+                                  <b>{productPrice(p, lang)}</b>
                                 </button>
                               ))}
                             </div>
@@ -1043,7 +1043,7 @@ export default function App() {
             <div>
               <span className="eyebrow">{detail.sku}</span>
               <h2>
-                {money(detail.price_minor, lang)}{" "}
+                {productPrice(detail, lang)}{" "}
                 <small>/ {t(detail.unit)}</small>
               </h2>
               <p
@@ -1102,7 +1102,8 @@ export default function App() {
               className="button primary"
               disabled={
                 busy ||
-                quantity < 1 ||
+                detail.read_only ||
+                  quantity < 1 ||
                 quantity % detail.step !== 0 ||
                 quantity > (detail.stores[warehouse] ?? 0)
               }
@@ -1125,7 +1126,7 @@ export default function App() {
               >
                 <strong>{productName(a.product, lang)}</strong>
                 <span>
-                  {money(a.product.price_minor, lang)} · {a.product.sku}
+                  {productPrice(a.product, lang)} · {a.product.sku}
                 </span>
                 <small>
                   {t("matched")}: {a.matched.map(t).join(", ")}
@@ -1235,7 +1236,7 @@ export default function App() {
                 <tr>
                   <th>{t("price")}</th>
                   {compare.map((p) => (
-                    <td key={p.sku}>{money(p.price_minor, lang)}</td>
+                    <td key={p.sku}>{productPrice(p, lang)}</td>
                   ))}
                 </tr>
                 {Array.from(

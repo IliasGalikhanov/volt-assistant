@@ -6,7 +6,7 @@ import {
   Check,
 } from "lucide-react";
 import type { Language, Product } from "../shared/types";
-import { money, productName, translator } from "../shared/i18n";
+import { money, productName, translator, productPrice } from "../shared/i18n";
 export function ProductSymbol({ category }: { category: string }) {
   const Icon =
     category === "cable"
@@ -63,7 +63,7 @@ export function ProductCard({
         </p>
         <div className="product-bottom">
           <div>
-            <strong>{money(p.price_minor, lang)}</strong>
+            <strong>{productPrice(p, lang)}</strong>
             <span className="muted"> / {t(p.unit)}</span>
           </div>
           <button

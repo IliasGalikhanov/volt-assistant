@@ -465,3 +465,5 @@ export function money(n: number, lang: Language) {
     { style: "currency", currency: "KZT", maximumFractionDigits: 2 },
   ).format(n / 100);
 }
+
+export function productPrice(p: Product, lang: Language) { return p.read_only ? ({ru:"Требует уточнения",kk:"Нақтылау қажет",en:"Requires verification"}[lang]) : money(p.price_minor,lang); }

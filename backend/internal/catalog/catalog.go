@@ -10,9 +10,11 @@ import (
 	"unicode"
 
 	"github.com/IliasGalikhanov/volt-assistant/backend/internal/storage"
+	"github.com/jackc/pgx/v5"
 )
 
 type Product struct {
+	ReadOnly    bool              `json:"read_only,omitempty"`
 	SKU         string            `json:"sku"`
 	Name        string            `json:"name"`
 	Names       map[string]string `json:"names,omitempty"`
@@ -40,6 +42,12 @@ func (p Product) Available(warehouse string) int { return p.Stores[warehouse] }
 func Validate(p Product) error {
 	if strings.TrimSpace(p.SKU) == "" || len(p.SKU) > 100 || strings.TrimSpace(p.Name) == "" || len(p.Name) > 500 {
 		return fmt.Errorf("sku and name are required (max 100/500 characters)")
+	}
+	if p.ReadOnly {
+		if p.PriceMinor != 0 || p.Currency != "" || p.Unit != "unknown" {
+			return fmt.Errorf("read-only supplier records must not assert unverified price units")
+		}
+		return nil
 	}
 	if p.PriceMinor <= 0 || p.PriceMinor > 1_000_000_000_000 || p.Currency != "KZT" {
 		return fmt.Errorf("positive price_minor and currency KZT required")
@@ -115,6 +123,19 @@ func (s *Service) Get(ctx context.Context, dataset, sku string) (Product, error)
 
 // Import creates a complete version in a transaction; existing datasets are never overwritten.
 func (s *Service) Import(ctx context.Context, owner, name, kind string, products []Product) (string, error) {
+	tx, err := s.DB.Pool.Begin(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback(ctx)
+	id, err := s.ImportTx(ctx, tx, owner, name, kind, products)
+	if err != nil {
+		return "", err
+	}
+	return id, tx.Commit(ctx)
+}
+
+func (s *Service) ImportTx(ctx context.Context, tx pgx.Tx, owner, name, kind string, products []Product) (string, error) {
 	if len(products) == 0 || len(products) > 10000 {
 		return "", fmt.Errorf("catalogue must contain 1..10000 products")
 	}
@@ -128,11 +149,7 @@ func (s *Service) Import(ctx context.Context, owner, name, kind string, products
 		}
 		seen[p.SKU] = true
 	}
-	tx, err := s.DB.Pool.Begin(ctx)
-	if err != nil {
-		return "", err
-	}
-	defer tx.Rollback(ctx)
+	var err error
 	id := storage.ID()
 	if _, err = tx.Exec(ctx, "INSERT INTO datasets(id,owner,name,kind) VALUES($1,$2,$3,$4)", id, owner, name, kind); err != nil {
 		return "", err
@@ -144,7 +161,7 @@ func (s *Service) Import(ctx context.Context, owner, name, kind string, products
 			return "", err
 		}
 	}
-	return id, tx.Commit(ctx)
+	return id, nil
 }
 
 func Normalize(s string) string {

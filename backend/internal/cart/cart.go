@@ -115,6 +115,9 @@ func (s *Service) quote(ctx context.Context, dataset string, items []Selection) 
 	return out, nil
 }
 func Check(p catalog.Product, i Selection) error {
+	if p.ReadOnly {
+		return fmt.Errorf("%s: supplier currency, unit and pack semantics must be verified before purchasing", p.SKU)
+	}
 	if i.Quantity <= 0 || p.Step < 1 || i.Quantity%p.Step != 0 {
 		return fmt.Errorf("%s: quantity must be a positive multiple of %d", p.SKU, p.Step)
 	}

@@ -50,6 +50,7 @@ func New(db *storage.Store, cfg config.Config) *App {
 	a.Mux.HandleFunc("GET /api/conditions", a.conditions)
 	a.registerChat()
 	a.registerFiles()
+	a.Mux.HandleFunc("POST /api/sources/ekt", a.connectSupplier)
 	a.Mux.HandleFunc("/", a.static)
 	return a
 }

@@ -1,6 +1,7 @@
 export type Language = "ru" | "kk" | "en";
 export type ModelMode = "primary" | "fallback" | "off";
 export type Product = {
+  read_only?: boolean;
   sku: string;
   name: string;
   names?: Record<string, string>;

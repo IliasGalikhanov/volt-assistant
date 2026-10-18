@@ -34,7 +34,7 @@ export function SpecificationReview({
       );
       return {
         ...row,
-        sku: p && (p.stores[warehouse] ?? 0) >= row.quantity ? p.sku : "",
+        sku: p && !p.read_only && (p.stores[warehouse] ?? 0) >= row.quantity ? p.sku : "",
         suggestions: [] as Alternative[],
         searched: false,
       };
@@ -69,6 +69,7 @@ export function SpecificationReview({
       const p = products.find((p) => p.sku === r.sku);
       return (
         p &&
+      !p.read_only &&
         r.quantity > 0 &&
         r.quantity % p.step === 0 &&
         r.quantity <= (p.stores[warehouse] ?? 0)
@@ -116,7 +117,7 @@ export function SpecificationReview({
                       <option
                         key={p.sku}
                         value={p.sku}
-                        disabled={(p.stores[warehouse] ?? 0) === 0}
+                        disabled={p.read_only || (p.stores[warehouse] ?? 0) === 0}
                       >
                         {p.sku} · {productName(p, lang)} ·{" "}
                         {p.stores[warehouse] ?? 0} {t(p.unit)}
