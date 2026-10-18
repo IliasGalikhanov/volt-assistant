@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useEffect } from "react";
+import { ProductPicker } from "../components/ProductPicker";
 import { api, ds } from "../shared/api";
 import { errorMessage } from "../shared/errors";
 import { productName, translator } from "../shared/i18n";
@@ -120,28 +121,15 @@ export function SpecificationReview({
                       }
                     />
                   </label>
-                  <label>
-                    {t("choose")}
-                    <select
-                      aria-label={`${t("choose")} ${i + 1}`}
-                      value={r.sku}
-                      onChange={(e) => update(i, { sku: e.target.value })}
-                    >
-                      <option value="">— {t("choose")} —</option>
-                      {products.map((p) => (
-                        <option
-                          key={p.sku}
-                          value={p.sku}
-                          disabled={
-                            p.read_only || (p.stores[warehouse] ?? 0) === 0
-                          }
-                        >
-                          {p.sku} · {productName(p, lang)} ·{" "}
-                          {p.stores[warehouse] ?? 0} {t(p.unit)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  <ProductPicker
+                    products={products}
+                    query={r.query}
+                    sku={r.sku}
+                    warehouse={warehouse}
+                    lang={lang}
+                    index={i}
+                    onChange={(sku) => update(i, { sku })}
+                  />
                   <div className="row-actions">
                     <label>
                       {t("quantity")}

@@ -1,5 +1,8 @@
 import type { Language, Product } from "./types";
 const ru = {
+  pickerHint: "Для поиска товара измените запрос из файла.",
+  pickerLimited: "Показаны первые 50 товаров. Уточните запрос из файла.",
+
   previousPage: "Назад",
   nextPage: "Далее",
 
@@ -165,6 +168,9 @@ const ru = {
 } as const;
 type Key = keyof typeof ru;
 const en: Record<Key, string> = {
+  pickerHint: "Edit the extracted query to find a product.",
+  pickerLimited: "Showing the first 50 products. Refine the extracted query.",
+
   previousPage: "Previous",
   nextPage: "Next",
 
@@ -327,6 +333,9 @@ const en: Record<Key, string> = {
   awaiting: "Select or correct the items",
 };
 const kk: Record<Key, string> = {
+  pickerHint: "Тауарды іздеу үшін файлдағы сұрауды өзгертіңіз.",
+  pickerLimited: "Алғашқы 50 тауар көрсетілген. Файлдағы сұрауды нақтылаңыз.",
+
   previousPage: "Алдыңғы",
   nextPage: "Келесі",
 
