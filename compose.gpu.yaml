@@ -1,0 +1,4 @@
+# Optional NVIDIA acceleration; use only when Docker Desktop/WSL has GPU access.
+services:
+  ollama:
+    gpus: all
