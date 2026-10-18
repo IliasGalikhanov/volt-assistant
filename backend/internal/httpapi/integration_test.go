@@ -301,3 +301,43 @@ func TestModelCannotOverrideExplicitConditionsOrArticle(t *testing.T) {
 		t.Fatal("model replaced explicit article", reply)
 	}
 }
+
+func TestDraftSurvivesReopenRejectsStaleWritesAndOtherSessions(t *testing.T) {
+	f := setup(t)
+	id := storage.ID()
+	_, err := f.db.Pool.Exec(context.Background(), "INSERT INTO jobs(id,session_id,dataset,kind,status,filename,original_name,result) VALUES($1,$2,'demo','specification','review','unused','draft.csv',$3)", id, f.session, `{"rows":[{"query":"DEMO-MCB-001","quantity":3}]}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	endpoint := "/api/jobs/" + id + "/draft"
+	var original draftEnvelope
+	f.request("GET", endpoint, nil, 200, &original)
+	if original.Draft != nil || original.Revision != 0 {
+		t.Fatal(original)
+	}
+	draft := draftEnvelope{Draft: &reviewDraft{Rows: []reviewRow{{Query: "corrected", Quantity: 5, SKU: "DEMO-MCB-002"}}, Warehouse: "central", Reviewed: true}}
+	var saved draftEnvelope
+	f.request("PUT", endpoint, draft, 200, &saved)
+	if saved.Revision != 1 {
+		t.Fatal(saved)
+	}
+	f.request("PUT", endpoint, draft, 409, nil)
+	other := setup(t)
+	other.request("GET", endpoint, nil, 404, nil)
+	other.request("PUT", endpoint, saved, 409, nil)
+	f.request("GET", endpoint, nil, 200, &original)
+	if original.Draft.Rows[0].Quantity != 5 || original.Draft.Rows[0].SKU != "DEMO-MCB-002" || !original.Draft.Reviewed {
+		t.Fatal(original)
+	}
+	original.Draft.Rows[0].Quantity = 0
+	f.request("PUT", endpoint, original, 400, nil)
+	var raw string
+	if err = f.db.Pool.QueryRow(context.Background(), "SELECT result::text FROM jobs WHERE id=$1", id).Scan(&raw); err != nil || !strings.Contains(raw, "DEMO-MCB-001") {
+		t.Fatal(raw, err)
+	}
+	var cartBefore cart.Cart
+	f.request("GET", "/api/cart", nil, 200, &cartBefore)
+	if len(cartBefore.Lines) != 0 {
+		t.Fatal("saving draft changed cart")
+	}
+}

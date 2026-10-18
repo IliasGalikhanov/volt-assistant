@@ -19,6 +19,8 @@ import (
 func (a *App) registerFiles() {
 	a.Mux.HandleFunc("POST /api/uploads", a.upload)
 	a.Mux.HandleFunc("GET /api/jobs", a.listJobs)
+	a.Mux.HandleFunc("GET /api/jobs/{id}/draft", a.getDraft)
+	a.Mux.HandleFunc("PUT /api/jobs/{id}/draft", a.saveDraft)
 	a.Mux.HandleFunc("POST /api/jobs/{id}/import", a.commitImport)
 	a.Mux.HandleFunc("DELETE /api/jobs/{id}", a.deleteJob)
 	a.Mux.HandleFunc("GET /api/cart/export", a.exportCart)
@@ -115,7 +117,7 @@ func (a *App) listJobs(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	rows, err := a.DB.Pool.Query(r.Context(), "SELECT id,kind,status,original_name,result,error,created_at FROM jobs WHERE session_id=$1 AND dataset=$2 ORDER BY created_at DESC LIMIT 30", Session(r), d)
+	rows, err := a.DB.Pool.Query(r.Context(), "SELECT id,kind,status,original_name,result,error,error_code,created_at FROM jobs WHERE session_id=$1 AND dataset=$2 ORDER BY created_at DESC LIMIT 30", Session(r), d)
 	if err != nil {
 		internal(w, err)
 		return
@@ -123,14 +125,14 @@ func (a *App) listJobs(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 	out := []map[string]any{}
 	for rows.Next() {
-		var id, kind, status, name, message string
+		var id, kind, status, name, message, errorCode string
 		var result json.RawMessage
 		var created time.Time
-		if err = rows.Scan(&id, &kind, &status, &name, &result, &message, &created); err != nil {
+		if err = rows.Scan(&id, &kind, &status, &name, &result, &message, &errorCode, &created); err != nil {
 			internal(w, err)
 			return
 		}
-		out = append(out, map[string]any{"id": id, "kind": kind, "status": status, "name": name, "result": result, "error": message, "created_at": created})
+		out = append(out, map[string]any{"id": id, "kind": kind, "status": status, "name": name, "result": result, "error": message, "error_code": errorCode, "created_at": created})
 	}
 	if rows.Err() != nil {
 		internal(w, rows.Err())
