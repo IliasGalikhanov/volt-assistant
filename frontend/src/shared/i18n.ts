@@ -466,4 +466,12 @@ export function money(n: number, lang: Language) {
   ).format(n / 100);
 }
 
-export function productPrice(p: Product, lang: Language) { return p.read_only ? ({ru:"Требует уточнения",kk:"Нақтылау қажет",en:"Requires verification"}[lang]) : money(p.price_minor,lang); }
+export function productPrice(p: Product, lang: Language) {
+  return p.read_only
+    ? {
+        ru: "Требует уточнения",
+        kk: "Нақтылау қажет",
+        en: "Requires verification",
+      }[lang]
+    : money(p.price_minor, lang);
+}

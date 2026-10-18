@@ -414,6 +414,7 @@ export default function App() {
               <a
                 key={p}
                 href={`#${p}`}
+                aria-label={t(p)}
                 className={`nav-item ${page === p ? "active" : ""}`}
                 aria-current={page === p ? "page" : undefined}
               >
@@ -1043,8 +1044,7 @@ export default function App() {
             <div>
               <span className="eyebrow">{detail.sku}</span>
               <h2>
-                {productPrice(detail, lang)}{" "}
-                <small>/ {t(detail.unit)}</small>
+                {productPrice(detail, lang)} <small>/ {t(detail.unit)}</small>
               </h2>
               <p
                 className={`status ${(detail.stores[warehouse] ?? 0) ? "green" : "amber"}`}
@@ -1103,7 +1103,7 @@ export default function App() {
               disabled={
                 busy ||
                 detail.read_only ||
-                  quantity < 1 ||
+                quantity < 1 ||
                 quantity % detail.step !== 0 ||
                 quantity > (detail.stores[warehouse] ?? 0)
               }
